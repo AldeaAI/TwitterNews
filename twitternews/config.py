@@ -10,6 +10,8 @@ def get_api_key() -> str:
     Reads the Perplexity API key from environment variables or config.toml.
     """
     api_key = os.environ.get("PERPLEXITY_API_KEY")
+    print(api_key)
+    
     if api_key:
         return api_key
 

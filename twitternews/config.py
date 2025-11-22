@@ -10,8 +10,6 @@ def get_api_key() -> str:
     Reads the Perplexity API key from environment variables or config.toml.
     """
     api_key = os.environ.get("PERPLEXITY_API_KEY")
-    print(api_key)
-    
     if api_key:
         return api_key
 
@@ -42,9 +40,7 @@ def get_twitter_credentials() -> Dict[str, str]:
     creds = {}
 
     for k in keys:
-        print(k)
         v = os.environ.get(k)
-        print(v)
         if v:
             creds[k] = v
 

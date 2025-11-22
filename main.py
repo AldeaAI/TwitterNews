@@ -9,6 +9,7 @@ def main():
 
     api_key = get_api_key()
     twitter_creds = get_twitter_credentials()
+    print(f"hola {twitter_creds} ")
     if len(twitter_creds) < 4:
         print("Some Twitter credentials are missing. Posting may fail if required credentials are not provided.")
     else:

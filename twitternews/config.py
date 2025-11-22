@@ -40,6 +40,7 @@ def get_twitter_credentials() -> Dict[str, str]:
     creds = {}
 
     for k in keys:
+        print(k)
         v = os.environ.get(k)
         if v:
             creds[k] = v

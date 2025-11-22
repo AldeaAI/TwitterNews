@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import difflib
 import toml
 from perplexity import Perplexity
+from urllib.parse import urlparse
 
 def get_api_key():
     """
@@ -172,7 +173,7 @@ def impact_analysis_agent(api_key, articles):
         "Eres un analista experto en el mercado inmobiliario de Colombia. A continuación se presenta una lista numerada de "
         "noticias recientes. Tu tarea es la siguiente:\n"
         "1. Analiza brevemente la relevancia de cada artículo para el mercado inmobiliario colombiano.\n"
-        "2. Basado en tu análisis, y dando prioridad a noticias de Medellín si las hay, selecciona la noticia que consideres más interesante para una audiencia de personas interesadas en invertir en propiedad raíz.\n"
+        "2. Basado en tu análisis, y dando prioridad a noticias de Medellín si las hay, selecciona la noticia que consideres más interesante para una audiencia de personas interesadas en invertir en propiedad raíz y en el sector inmobiliario.\n"
         "3. En una nueva línea, al final de toda tu respuesta, escribe ÚNICAMENTE el número del artículo que elegiste (ej: 3).\n\n"
         f"Artículos:\n{article_summaries}"
     )
@@ -197,6 +198,58 @@ def impact_analysis_agent(api_key, articles):
         return None
                 
     return None
+
+def is_blacklisted(url):
+    """
+    Returns True if:
+    1. The URL is a root domain (landing page) for ANY website.
+    2. The URL is from a RESTRICTED_DOMAIN and has exactly one path segment.
+    """
+    # Add any new domains you want to restrict here
+    RESTRICTED_DOMAINS = [
+                        "eltiempo.com",
+                        "noticiascaracol.com",
+                        "elespectador.com",
+                        "elcolombiano.com",
+                        "larepublica.co",
+                        "semana.com",
+                        "portafolio.co",
+                        "bluradio.com",
+                        "vanguardia.com",
+                        "elheraldo.co",
+                        "publimetro.co",
+                        "rcnradio.com",
+                        "caracol.com.co",
+                        "semana.com",
+                        "elpais.com.co"                            
+    ]
+
+    try:
+        parsed = urlparse(url)
+        domain = parsed.netloc.lower()
+        clean_path = parsed.path.strip("/")
+        
+        # --- RULE 1: Global Landing Page Block ---
+        # Blocks "example.com" or "example.com/"
+        if not clean_path:
+            return True
+
+        # --- RULE 2: Restricted Domain "One Segment" Block ---
+        # Check if the URL belongs to ANY of the restricted domains
+        if any(d in domain for d in RESTRICTED_DOMAINS):
+            
+            # Split path into segments
+            segments = clean_path.split("/")
+            
+            # Block if exactly ONE segment (e.g. /deportes, /economy)
+            if len(segments) == 1:
+                return True
+                
+        return False
+        
+    except Exception as e:
+        print(f"Error parsing URL {url}: {e}")
+        return False
 
 def news_research_agent(api_key, sources):
     """
@@ -231,7 +284,7 @@ def news_research_agent(api_key, sources):
         )
         
         for result in search.results:
-            if result.url not in seen_urls:
+            if result.url not in seen_urls and not is_blacklisted(result.url):
                 all_results.append(result)
                 seen_urls.add(result.url)
                 

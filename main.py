@@ -180,7 +180,7 @@ def impact_analysis_agent(api_key, articles):
     
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="sonar-pro",
+        model="sonar", #"sonar-pro",
     )
     
     full_response = completion.choices[0].message.content.strip()
@@ -188,7 +188,6 @@ def impact_analysis_agent(api_key, articles):
     print(full_response)
     print("---------------------------------\n")
 
-    # The final choice is the last line of the response
     # The final choice is the last line of the response
     try:
         selected_index = int(full_response.split('\n')[-1]) - 1

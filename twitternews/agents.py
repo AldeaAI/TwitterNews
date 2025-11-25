@@ -50,7 +50,7 @@ def impact_analysis_agent(api_key: str, articles: List[Any]) -> Optional[Any]:
     # Build a JSON array of article objects (id, title, snippet, url)
     article_list = [
         # {"id": i + 1, "title": a.title, "snippet": a.snippet, "url": a.url}
-        {"id": i + 1, "title": a.title, "snippet": a.snippet, "url": a.url}
+        {"id": i + 1, "title": a.title,  "url": a.url}
         for i, a in enumerate(articles)
     ]
     article_summaries = json.dumps(article_list, ensure_ascii=False, indent=2)
@@ -89,7 +89,7 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
         "Eres un analista de mercado experto en el sector inmobiliario. "
         "Tu tarea es redactar un post para Twitter resumiendo la noticia proporcionada por el usuario. "
         "El post debe tener un tono sobrio, inteligente y conciso. No utilices emojis ni signos de exclamación. "
-        "El post debe resumir el punto clave de la noticia y NO debe exceder los 260 caracteres. "
+        "El post debe resumir el punto clave de la noticia y NO puede exceder los 260 caracteres. Es obligatorio que tenga menos de 260 caracteres."
         "Incluye el hashtag #AldeaAI y añade la URL completa de la noticia original al final."
     )
 

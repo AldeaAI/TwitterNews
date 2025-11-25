@@ -65,7 +65,7 @@ def impact_analysis_agent(api_key: str, articles: List[Any]) -> Optional[Any]:
     )
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="sonar",
+        model="sonar-pro",
     )
     full_response = completion.choices[0].message.content.strip()
     print("\n--- Analyst Agent's Reasoning ---")

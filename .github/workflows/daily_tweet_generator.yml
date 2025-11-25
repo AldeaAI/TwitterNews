@@ -32,10 +32,10 @@ jobs:
           TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
         run: python main.py
 
-      - name: Configure Git
-        run: |
-          git config --global user.name 'GitHub Actions Bot'
-          git config --global user.email 'actions-bot@github.com'
+      # - name: Configure Git
+      #   run: |
+      #     git config --global user.name 'GitHub Actions Bot'
+      #     git config --global user.email 'actions-bot@github.com'
 
       # - name: Commit and push history file
       #   run: |

@@ -37,9 +37,22 @@ jobs:
           git config --global user.name 'GitHub Actions Bot'
           git config --global user.email 'actions-bot@github.com'
 
-      - name: Commit and push history file
+      # - name: Commit and push history file
+      #   run: |
+      #     git add post_history.json
+      #     # Check for changes before committing
+      #     if ! git diff --quiet --exit-code post_history.json; then
+      #       git commit -m "Update post history"
+      #       git push
+      #     else
+      #       echo "No changes to post_history.json to commit."
+      #     fi
+
+      - name: update history file
         run: |
-          git add post_history.json
-          git commit -m "Update post history" 
-          git push   
-          # git diff --quiet --exit-code post_history.json || (git commit -m "Update post history" && git push)
+          pwd
+          git config --global user.email "AldeaAI@protonmail.com"
+          git config --global user.name "AldeaAI"
+          git add -A 
+          git commit -m 'Update post history'
+          git push          

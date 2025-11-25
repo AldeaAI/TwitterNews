@@ -39,5 +39,6 @@ jobs:
 
       - name: Commit and push history file
         run: |
-          git add post_history.json
-          git diff --quiet --exit-code post_history.json || (git commit -m "Update post history" && git push)
+          git add -A
+          git commit -m "Update post history" 
+          git push

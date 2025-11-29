@@ -2,6 +2,7 @@ from typing import List, Optional, Any
 from perplexity import Perplexity
 from .utils import is_blacklisted
 import json
+import re
 
 def news_research_agent(api_key: str, sources: List[str]) -> List[Any]:
     """
@@ -31,7 +32,7 @@ def news_research_agent(api_key: str, sources: List[str]) -> List[Any]:
             search_language_filter=["es"],
             search_recency_filter="week",
             search_domain_filter=sources,
-            max_results=2,
+            max_results=4,
         )
         for result in search.results:
             if result.url not in seen_urls and not is_blacklisted(result.url):
@@ -56,7 +57,7 @@ def impact_analysis_agent(api_key: str, articles: List[Any]) -> Optional[Any]:
     article_summaries = json.dumps(article_list, ensure_ascii=False, indent=2)
     prompt = (
         "Eres un analista experto en el mercado inmobiliario de Colombia. A continuación se presenta un array JSON con "
-        "noticias. Cada elemento es un objeto con campos 'id', 'title', 'snippet' y 'url'.\n"
+        "noticias. Cada elemento es un objeto con campos 'id', 'title' y 'url'.\n"
         "Tu tarea es la siguiente:\n"
         "1. Analiza brevemente la relevancia de cada artículo para el mercado inmobiliario colombiano.\n"
         "2. Basado en tu análisis, y dando prioridad a noticias de Medellín si las hay, selecciona la noticia que consideres más interesante para una audiencia de personas interesadas en invertir en propiedad raíz y en el sector inmobiliario.\n"
@@ -72,7 +73,8 @@ def impact_analysis_agent(api_key: str, articles: List[Any]) -> Optional[Any]:
     print(full_response)
     print("---------------------------------\n")
     try:
-        selected_index = int(full_response.split("\n")[-1]) - 1
+        last_line = full_response.split("\n")[-1]
+        selected_index = int(re.search(r'\d+', last_line).group(0)) -1 
         if 0 <= selected_index < len(articles):
             return articles[selected_index]
     except (ValueError, IndexError):
@@ -94,7 +96,7 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
     )
 
     user_prompt = (
-        "Por favor, redacta el tuit utilizando la siguiente información de la noticia:\n\n"
+        "Redacta el tuit utilizando la siguiente información de la noticia:\n\n"
         f"Noticia:\n"
         f"Título: {article.title}\n"
         f"Contenido: {article.snippet}\n"

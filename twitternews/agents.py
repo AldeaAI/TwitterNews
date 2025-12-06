@@ -32,7 +32,7 @@ def news_research_agent(api_key: str, sources: List[str]) -> List[Any]:
             search_language_filter=["es"],
             search_recency_filter="week",
             search_domain_filter=sources,
-            max_results=4,
+            max_results=7,
         )
         for result in search.results:
             if result.url not in seen_urls and not is_blacklisted(result.url):
@@ -92,11 +92,12 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
         "Tu tarea es redactar un post para Twitter resumiendo la noticia proporcionada por el usuario. "
         "El post debe tener un tono sobrio, inteligente y conciso. No utilices emojis ni signos de exclamación. "
         "El post debe resumir el punto clave de la noticia y NO puede exceder los 260 caracteres. Es obligatorio que tenga menos de 260 caracteres."
-        "Incluye el hashtag #AldeaAI y añade la URL completa de la noticia original al final."
+        "Incluye el hashtag #AldeaAI y añade la URL completa de la noticia original al final." \
+        "No incluyas ninguna información adicional. Únicamente el texto del post de Twitter."
     )
 
     user_prompt = (
-        "Redacta el tuit utilizando la siguiente información de la noticia:\n\n"
+        "Redacta el psot de Twitter (tuit) utilizando la siguiente información de la noticia:\n\n"
         f"Noticia:\n"
         f"Título: {article.title}\n"
         f"Contenido: {article.snippet}\n"

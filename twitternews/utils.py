@@ -27,6 +27,7 @@ BLACKLISTED_URLS = {
 
 BLACKLISTED_URL_PREFIXES = [
     "https://www.bluradio.com/noticias",
+    "https://www.bluradio.com/casa-blu",
     "https://www.larepublica.co/indicadores-economicos",
     "https://www.elespectador.com/archivo",
     "https://caracol.com.co/tag",

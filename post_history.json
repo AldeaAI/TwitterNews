@@ -1,9 +1,5 @@
 [
     {
-        "url": "https://www.larepublica.co/especiales/la-colombia-que-nos-espera",
-        "date": "2025-12-22T20:28:01.338797"
-    },
-    {
         "url": "https://www.elpais.com.co/economia/emergencia-economica-y-nuevos-gravamenes-expertos-advierten-impactos-en-inversion-y-estabilidad-juridica-2157.html",
         "date": "2025-12-23T08:35:24.697739"
     },
@@ -42,5 +38,9 @@
     {
         "url": "https://www.elcolombiano.com/medellin/mansiones-patrimonio-prado-medellin-PG32077954",
         "date": "2025-12-29T12:43:42.475702"
+    },
+    {
+        "url": "https://www.elcolombiano.com/negocios/salario-minimo-colombia-2026-alza-23-por-ciento-impacto-vivienda-vis-FB32112997",
+        "date": "2025-12-29T20:29:01.285142"
     }
 ]

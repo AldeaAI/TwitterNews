@@ -91,13 +91,12 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
         "Eres un analista de mercado experto en el sector inmobiliario. "
         "Tu tarea es redactar un post para Twitter resumiendo la noticia proporcionada por el usuario. "
         "El post debe tener un tono sobrio, inteligente y conciso. No utilices emojis ni signos de exclamación. "
-        "El post debe resumir el punto clave de la noticia y NO puede exceder los 245 caracteres, incluyendo espacios. Es obligatorio que tenga menos de 260 caracteres."
-        "Incluye el hashtag #AldeaAI y añade la URL completa de la noticia original al final." \
-        "No incluyas ninguna información adicional. Únicamente el texto del post de Twitter."
+        "El post debe resumir el punto clave de la noticia y NO puede exceder los 245 caracteres, incluyendo espacios. Es obligatorio que tenga menos de 245 caracteres."
+        "No incluyas ninguna información adicional. No menciones el número de caracteres en el post. No incluyas referencias ni numeros de citaciones."
     )
 
     user_prompt = (
-        "Redacta el psot de Twitter (tuit) utilizando la siguiente información de la noticia:\n\n"
+        "Redacta el post de Twitter (tuit) utilizando la siguiente información de la noticia:\n\n"
         f"Noticia:\n"
         f"Título: {article.title}\n"
         f"Contenido: {article.snippet}\n"
@@ -113,3 +112,36 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
 
     )
     return completion.choices[0].message.content
+
+def tweet_optimizer_agent(api_key: str, tweet_text: str) -> str:
+    """
+    Takes a tweet that exceeds 245 characters and optimizes it to be under 245 characters.
+    Returns the optimized tweet text.
+    """
+    if len(tweet_text) <= 245:
+        return tweet_text
+    
+    client = Perplexity(api_key=api_key)
+
+    user_prompt = (
+        f"Optimiza el siguiente tweet para que tenga menos de 245 caracteres. Solo escribe el nuevo tweet. Sin citaciones ni informacion adicional:\n\n"
+        f"Tweet original ({len(tweet_text)} caracteres):\n{tweet_text}"
+    )
+
+    completion = client.chat.completions.create(
+        messages=[
+            {"role": "user", "content": user_prompt}
+        ], 
+        model="sonar-pro",
+    )
+    
+    optimized_tweet = completion.choices[0].message.content.strip()
+
+
+    # Remove reference citations like [1], [2], etc. from the tweet
+    optimized_tweet = re.sub(r'\[\d+\]', '', optimized_tweet).strip()
+
+    # Remove "(number caracteres)" text if present
+    optimized_tweet = re.sub(r'\(\d+\s+caracteres?\)', '', optimized_tweet).strip()
+
+    return optimized_tweet

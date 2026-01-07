@@ -27,8 +27,9 @@ Usage:
 import sys
 from twitternews.config import get_api_key, get_twitter_credentials, load_sources
 from twitternews.history import load_history, save_history
-from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent
+from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent, tweet_optimizer_agent
 from twitternews.twitter_utils import post_tweet
+import re
 
 def main():
     """
@@ -129,8 +130,81 @@ def main():
     # Generate a concise Twitter post recommended for X (Twitter)
     print("\n[Agent 3/3] Generating Twitter post...")
     tweet = twitter_writer_agent(api_key, most_relevant)
+    print("-----------------------\n")
 
-    print("\n--- Generated Tweet ---")
+
+    print("\n--- Generated Tweet Text ---")
+    print(tweet)
+    # print("-----------------------\n")
+
+    # -------------------------------
+    # --- Verify tweet length ---
+    # -------------------------------
+
+    # Remove reference citations like [1], [2], etc. from the tweet
+    tweet = re.sub(r'\[\d+\]', '', tweet).strip()
+    print("\n--- Tweet Text After Removing Citations ---")
+    print(tweet)
+    print("-----------------------\n")
+
+    # Remove "(number caracteres)" text if present
+    tweet = re.sub(r'\(\d+\s+caracteres?\)', '', tweet).strip()
+    print("\n--- Tweet Text After Removing Character Count ---")
+    print(tweet)
+    print("-----------------------\n")
+
+    # Check if tweet exceeds 245 characters (including spaces)
+    if len(tweet) > 245:
+        print(f"Warning: Tweet is {len(tweet)} characters, exceeds 245 character limit.")
+        print("Attempting to optimize tweet to fit within limit...")
+
+        tweet = tweet_optimizer_agent(api_key, tweet)
+        
+        print("optimised tweet length:", len(tweet))
+
+        print("\n--- Optimized Tweet Text ---")
+        print(tweet)
+        print("-----------------------\n")
+
+        if len(tweet) > 245:
+            print(f"Error: Optimized tweet is still {len(tweet)} characters, exceeds 245 character limit.")
+            print("Cannot proceed with posting. Please review the optimization logic.")
+            return
+        # print("Consider regenerating or manually shortening the tweet.")
+        # return
+    else:
+        print(f"Tweet length: {len(tweet)} characters (within 245 character limit)")
+    # -------------------------------
+    # --- Add hashtag to tweet ---
+    # -------------------------------
+
+    # Add #AldeaAI hashtag to the tweet
+    if "#AldeaAI" not in tweet:
+        # Check if adding hashtag would exceed character limit
+        tweet_with_hashtag = f"{tweet} #AldeaAI"
+        tweet = tweet_with_hashtag
+        print(f"Added #AldeaAI hashtag. New tweet length: {len(tweet)} characters\n")
+
+
+    # -------------------------------
+    # --- Add website source to tweet ---
+    # -------------------------------
+    
+    # Add the source website URL to provide attribution
+    if most_relevant.url:
+        # Extract domain from URL for cleaner display
+        domain = most_relevant.url
+        
+        # Create attribution text
+        source_text = f" {domain}"
+        
+        # Check if adding source would exceed character limit
+        tweet_with_source = f"{tweet}{source_text}"
+        tweet = tweet_with_source
+        print(f"Added source attribution. New tweet length: {len(tweet_with_hashtag) + 23} characters")
+
+
+    print("\n--- Generated Full Tweet Text ---")
     print(tweet)
     print("-----------------------\n")
 
@@ -154,7 +228,7 @@ def main():
     # --- History: Persist the posted URL ---
     # Save the article to the history so it is not posted again in the short term
     save_history(most_relevant.url, history)
-    print(f"Article '{most_relevant.title}' saved to history.")
+    print(f"\nArticle '{most_relevant.title}' saved to history.")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,8 @@ RESTRICTED_DOMAINS = [
 BLACKLISTED_URLS = {
     "https://www.bluradio.com/noticias",
     "https://www.larepublica.co/videos/datos-cocteleros",
-    "https://www.lafm.com.co/noticias/inversiones"
+    "https://www.lafm.com.co/noticias/inversiones",
+    "https://www.elheraldo.co/tags"
     
     # Add more URLs here as needed
 }

@@ -147,8 +147,10 @@ def main():
     print(tweet)
     print("-----------------------\n")
 
-    # Remove "(number caracteres)" text if present
+    # Remove "(number caracteres)" or "[number caracteres]" text if present
     tweet = re.sub(r'\(\d+\s+caracteres?\)', '', tweet).strip()
+    tweet = re.sub(r'\[\d+\s+caracteres?\]', '', tweet).strip()
+  
     print("\n--- Tweet Text After Removing Character Count ---")
     print(tweet)
     print("-----------------------\n")

@@ -22,7 +22,8 @@ BLACKLISTED_URLS = {
     "https://www.bluradio.com/noticias",
     "https://www.larepublica.co/videos/datos-cocteleros",
     "https://www.lafm.com.co/noticias/inversiones",
-    "https://www.elheraldo.co/tags"
+    "https://www.elheraldo.co/tags",
+    "https://www.lafm.com.co/noticias/colombia"
     
     # Add more URLs here as needed
 }

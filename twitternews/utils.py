@@ -22,7 +22,6 @@ BLACKLISTED_URLS = {
     "https://www.bluradio.com/noticias",
     "https://www.larepublica.co/videos/datos-cocteleros",
     "https://www.lafm.com.co/noticias/inversiones",
-    "https://www.elheraldo.co/tags",
     "https://www.lafm.com.co/noticias/colombia"
     
     # Add more URLs here as needed
@@ -34,7 +33,8 @@ BLACKLISTED_URL_PREFIXES = [
     "https://www.larepublica.co/indicadores-economicos",
     "https://www.elespectador.com/archivo",
     "https://caracol.com.co/tag",
-    "https://www.elcolombiano.com/multimedia"
+    "https://www.elcolombiano.com/multimedia",
+    "https://www.elheraldo.co/tags"
     # Add more URL prefixes here as needed
 ]
 

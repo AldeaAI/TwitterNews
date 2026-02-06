@@ -15,6 +15,7 @@ RESTRICTED_DOMAINS = [
     "rcnradio.com",
     "caracol.com.co",
     "elpais.com.co",
+    "lasillavacia.com",
 ]
 
 # Add specific URLs to this set to blacklist them exactly

@@ -69,6 +69,10 @@ def is_blacklisted(url: str) -> bool:
             if len(clean_path.split("/")) == 1:
                 return True
 
+        # Blacklist URLs containing 'AMP' (case-insensitive)
+        if "amp" in url.lower():
+            return True
+
         return False
     except Exception:
         return False

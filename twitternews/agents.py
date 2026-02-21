@@ -66,7 +66,7 @@ def impact_analysis_agent(api_key: str, articles: List[Any]) -> Optional[Any]:
     )
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="sonar-pro",
+        model="sonar",
     )
     full_response = completion.choices[0].message.content.strip()
     print("\n--- Analyst Agent's Reasoning ---")
@@ -108,7 +108,7 @@ def twitter_writer_agent(api_key: str, article: Any) -> str:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                     ], 
-                model="sonar-pro",
+                model="sonar",
 
     )
     return completion.choices[0].message.content
@@ -132,7 +132,7 @@ def tweet_optimizer_agent(api_key: str, tweet_text: str) -> str:
         messages=[
             {"role": "user", "content": user_prompt}
         ], 
-        model="sonar-pro",
+        model="sonar",
     )
     
     optimized_tweet = completion.choices[0].message.content.strip()

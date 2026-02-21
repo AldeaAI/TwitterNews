@@ -21,7 +21,7 @@ def generate_sources() -> str:
 
     completion = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="sonar-pro",
+        model="sonar",
     )
     return completion.choices[0].message.content
 

@@ -35,7 +35,8 @@ BLACKLISTED_URL_PREFIXES = [
     "https://www.elespectador.com/archivo",
     "https://caracol.com.co/tag",
     "https://www.elcolombiano.com/multimedia",
-    "https://www.elheraldo.co/tags"
+    "https://www.elheraldo.co/tags",
+    "m.elcolombiano.com"
     # Add more URL prefixes here as needed
 ]
 

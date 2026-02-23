@@ -1,9 +1,5 @@
 [
     {
-        "url": "https://caracol.com.co/actualidad/economia/",
-        "date": "2026-02-16T20:37:07.099454"
-    },
-    {
         "url": "https://www.elespectador.com/economia/desembolsos-hipotecarios-crecen-10-pero-caen-las-unidades-financiadas/",
         "date": "2026-02-17T08:52:56.145835"
     },
@@ -66,5 +62,9 @@
     {
         "url": "https://www.valoraanalitik.com/tu360-bancolombia-ofertas-proyectos-vivienda/",
         "date": "2026-02-23T14:52:21.416269"
+    },
+    {
+        "url": "https://www.larepublica.co/economia/inversion-alcanzo-su-nivel-mas-bajo-en-dos-decadas-con-participacion-de-16-del-pib-4329170",
+        "date": "2026-02-23T20:50:19.258594"
     }
 ]

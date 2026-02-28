@@ -16,6 +16,7 @@ RESTRICTED_DOMAINS = [
     "caracol.com.co",
     "elpais.com.co",
     "lasillavacia.com",
+    "dane.gov.co/index.php/actualidad-dane"
 ]
 
 # Add specific URLs to this set to blacklist them exactly
@@ -23,7 +24,8 @@ BLACKLISTED_URLS = {
     "https://www.bluradio.com/noticias",
     "https://www.larepublica.co/videos/datos-cocteleros",
     "https://www.lafm.com.co/noticias/inversiones",
-    "https://www.lafm.com.co/noticias/colombia"
+    "https://www.lafm.com.co/noticias/colombia,"
+    "https://www.dane.gov.co/index.php/actualidad-dane"
     
     # Add more URLs here as needed
 }

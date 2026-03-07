@@ -25,7 +25,8 @@ BLACKLISTED_URLS = {
     "https://www.larepublica.co/videos/datos-cocteleros",
     "https://www.lafm.com.co/noticias/inversiones",
     "https://www.lafm.com.co/noticias/colombia,"
-    "https://www.dane.gov.co/index.php/actualidad-dane"
+    "https://www.dane.gov.co/index.php/actualidad-dane",
+    "https://www.larepublica.co/foros"
     
     # Add more URLs here as needed
 }

@@ -30,6 +30,7 @@ from twitternews.history import load_history, save_history
 from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent, tweet_optimizer_agent
 from twitternews.twitter_utils import post_tweet
 import re
+from InstagramNews.instagram_post import create_and_optionally_post_instagram
 
 def main():
     """
@@ -209,6 +210,41 @@ def main():
     print("\n--- Generated Full Tweet Text ---")
     print(tweet)
     print("-----------------------\n")
+
+    # --- Instagram Post Generation and Optional Publishing ---
+    try:
+        instagram_background = "InstagramNews/Backgrounds/InstagramBackground_1.png"
+        instagram_output = "InstagramNews/generated_instagram_post.png"
+        roboto_font_path = "InstagramNews/Fonts/Roboto-Regular.ttf"
+        # Credentials can be set via environment or config if desired
+        import os
+        import toml
+        # Try to load Instagram credentials from environment, then config.toml
+        insta_user = os.getenv('INSTAGRAM_USER')
+        insta_pass = os.getenv('INSTAGRAM_PASS')
+        if not insta_user or not insta_pass:
+            try:
+                config = toml.load('config.toml')
+                insta_user = insta_user or config.get('INSTAGRAM_USER')
+                insta_pass = insta_pass or config.get('INSTAGRAM_PASS')
+            except Exception:
+                pass
+        image_path, caption, post_result = create_and_optionally_post_instagram(
+            tweet,
+            instagram_output,
+            font_path=roboto_font_path,
+            username=insta_user,
+            password=insta_pass,
+            article_url=most_relevant.url
+        )
+        print(f"Instagram image generated at: {image_path}")
+        print(f"Instagram caption: {caption}")
+        if post_result:
+            print(f"Instagram post published: {post_result}")
+        else:
+            print("Instagram post not published (manual upload or credentials missing)")
+    except Exception as e:
+        print(f"Instagram post generation failed: {e}")
 
     # -------------------------------
     # --- Optional: Posting the tweet ---

@@ -2,3 +2,5 @@ perplexityai
 requests
 toml
 tweepy
+Pillow
+instagrapi

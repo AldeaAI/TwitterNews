@@ -17,43 +17,56 @@ def remove_hashtag(text, hashtag="#AldeaAI"):
     import re
     return re.sub(rf"\s*{re.escape(hashtag)}\b", "", text)
 
+_BROWSER_HEADERS = {
+    'User-Agent': (
+        'Mozilla/5.0 (X11; Linux x86_64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/120.0.0.0 Safari/537.36'
+    ),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'es-CO,es;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Cache-Control': 'max-age=0',
+}
+
 def fetch_overlay_image(url):
     try:
-        headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (X11; Linux x86_64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/120.0.0.0 Safari/537.36'
-            )
-        }
-        resp = requests.get(url, timeout=10, headers=headers)
+        # Use image-specific Accept header for the image fetch
+        img_headers = dict(_BROWSER_HEADERS)
+        img_headers['Accept'] = 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
+        img_headers['Sec-Fetch-Dest'] = 'image'
+        img_headers['Sec-Fetch-Mode'] = 'no-cors'
+        resp = requests.get(url, timeout=15, headers=img_headers)
         resp.raise_for_status()
         img = Image.open(BytesIO(resp.content)).convert('RGBA')
         return img
-    except Exception:
+    except Exception as e:
+        print(f"[fetch_overlay_image] failed: {e}")
         return None
 
 def extract_og_or_twitter_image(url):
     try:
-        headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (X11; Linux x86_64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/120.0.0.0 Safari/537.36'
-            )
-        }
-        resp = requests.get(url, timeout=10, headers=headers)
+        resp = requests.get(url, timeout=15, headers=_BROWSER_HEADERS)
         resp.raise_for_status()
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.text, 'html.parser')
         og = soup.find('meta', property='og:image')
         tw = soup.find('meta', attrs={'name': 'twitter:image'})
         if og and og.get('content'):
+            print(f"[extract_og_or_twitter_image] found og:image: {og['content']}")
             return og['content']
         if tw and tw.get('content'):
+            print(f"[extract_og_or_twitter_image] found twitter:image: {tw['content']}")
             return tw['content']
-    except Exception:
-        pass
+        print(f"[extract_og_or_twitter_image] no og:image or twitter:image found for {url}")
+    except Exception as e:
+        print(f"[extract_og_or_twitter_image] failed: {e}")
     return None
 
 def generate_instagram_image(text, output_path, font_path=None, font_size=48, max_width=40, overlay_url=None):
@@ -61,9 +74,11 @@ def generate_instagram_image(text, output_path, font_path=None, font_size=48, ma
     Generate an Instagram-ready image with the given text over the website image (or white background).
     """
     bg_size = (1080, 1080)
+    print(f"[generate_instagram_image] overlay_url={overlay_url}")
     if overlay_url:
         overlay_img = fetch_overlay_image(overlay_url)
         if overlay_img:
+            print(f"[generate_instagram_image] overlay image fetched OK, size={overlay_img.size}")
             # Resize overlay_img to fit bg_size without deformation
             ow, oh = overlay_img.size
             bw, bh = bg_size
@@ -76,8 +91,10 @@ def generate_instagram_image(text, output_path, font_path=None, font_size=48, ma
             paste_y = (bh - new_size[1]) // 2
             base.alpha_composite(overlay_img, (paste_x, paste_y))
         else:
+            print("[generate_instagram_image] overlay image fetch returned None, using white background")
             base = Image.new('RGBA', bg_size, (255,255,255,255))
     else:
+        print("[generate_instagram_image] no overlay_url provided, using white background")
         base = Image.new('RGBA', bg_size, (255,255,255,255))
     image = base.copy()
     draw = ImageDraw.Draw(image)
@@ -244,7 +261,9 @@ def create_and_optionally_post_instagram(text, output_path, font_path=None, user
     text_no_link = remove_link(text)
     text_no_link = remove_hashtag(text_no_link, hashtag="#AldeaAI")
     caption = f"Fuente: {link}" if link else ""
+    print(f"[create_and_optionally_post_instagram] article_url={article_url}")
     overlay_url = extract_og_or_twitter_image(article_url) if article_url else None
+    print(f"[create_and_optionally_post_instagram] overlay_url resolved to: {overlay_url}")
     image_path = generate_instagram_image(text_no_link, output_path, font_path, overlay_url=overlay_url)
     post_result = None
     if username and password:

@@ -4,3 +4,4 @@ toml
 tweepy
 Pillow
 instagrapi
+beautifulsoup4

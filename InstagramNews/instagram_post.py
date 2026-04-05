@@ -241,9 +241,8 @@ def post_to_instagram(image_path, caption, username=None, password=None, session
     if session_file and os.path.exists(session_file):
         try:
             cl.load_settings(session_file)
-            cl.set_user(username, password)
-            # Validate without triggering a fresh login
-            cl.get_timeline_feed()
+            # login() with a loaded session reuses cookies instead of calling the login API
+            cl.login(username, password)
             print("[post_to_instagram] session reused successfully")
             media = cl.photo_upload(image_path, caption)
             # Refresh session after successful use

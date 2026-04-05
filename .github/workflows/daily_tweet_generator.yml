@@ -32,6 +32,7 @@ jobs:
           TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
           INSTAGRAM_USER: ${{ secrets.INSTAGRAM_USER }}
           INSTAGRAM_PASS: ${{ secrets.INSTAGRAM_PASS }}
+          INSTAGRAM_SESSION_FILE: InstagramNews/instagram_session.json
         run: python main.py
 
       - name: Configure Git

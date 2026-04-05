@@ -199,16 +199,47 @@ def generate_instagram_image(text, output_path, font_path=None, font_size=48, ma
     image.save(output_path)
     return output_path
 
-def post_to_instagram(image_path, caption, username=None, password=None):
+INSTAGRAM_DEVICE_SETTINGS = {
+    "app_version": "269.0.0.18.75",
+    "android_version": 26,
+    "android_release": "8.0.0",
+    "dpi": "480dpi",
+    "resolution": "1080x1920",
+    "manufacturer": "OnePlus",
+    "device": "ONEPLUS A3010",
+    "model": "OnePlus3T",
+    "cpu": "qcom",
+    "version_code": "314665256",
+}
+
+def post_to_instagram(image_path, caption, username=None, password=None, session_file=None):
     from instagrapi import Client
     if not username or not password:
         raise ValueError("Instagram username and password are required.")
     cl = Client()
-    cl.login(username, password)
+    cl.set_device(INSTAGRAM_DEVICE_SETTINGS)
+    logged_in = False
+    # Try to reuse an existing session without re-logging in
+    if session_file and os.path.exists(session_file):
+        try:
+            cl.load_settings(session_file)
+            cl.set_user(username, password)
+            # Validate session is still alive without triggering a fresh login
+            cl.get_timeline_feed()
+            logged_in = True
+        except Exception:
+            logged_in = False
+    # Fall back to full login if session missing or expired
+    if not logged_in:
+        cl = Client()
+        cl.set_device(INSTAGRAM_DEVICE_SETTINGS)
+        cl.login(username, password)
+        if session_file:
+            cl.dump_settings(session_file)
     media = cl.photo_upload(image_path, caption)
     return media
 
-def create_and_optionally_post_instagram(text, output_path, font_path=None, username=None, password=None, article_url=None):
+def create_and_optionally_post_instagram(text, output_path, font_path=None, username=None, password=None, article_url=None, session_file=None):
     link = extract_link(text)
     text_no_link = remove_link(text)
     text_no_link = remove_hashtag(text_no_link, hashtag="#AldeaAI")
@@ -217,5 +248,5 @@ def create_and_optionally_post_instagram(text, output_path, font_path=None, user
     image_path = generate_instagram_image(text_no_link, output_path, font_path, overlay_url=overlay_url)
     post_result = None
     if username and password:
-        post_result = post_to_instagram(image_path, caption, username, password)
+        post_result = post_to_instagram(image_path, caption, username, password, session_file=session_file)
     return image_path, caption, post_result

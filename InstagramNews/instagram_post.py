@@ -231,28 +231,46 @@ INSTAGRAM_DEVICE_SETTINGS = {
 
 def post_to_instagram(image_path, caption, username=None, password=None, session_file=None):
     from instagrapi import Client
+    from instagrapi.exceptions import ChallengeRequired, LoginRequired
     if not username or not password:
         raise ValueError("Instagram username and password are required.")
     cl = Client()
     cl.set_device(INSTAGRAM_DEVICE_SETTINGS)
-    logged_in = False
-    # Try to reuse an existing session without re-logging in
+
+    # --- Try session-based login (no password login on cloud IPs) ---
     if session_file and os.path.exists(session_file):
         try:
             cl.load_settings(session_file)
             cl.set_user(username, password)
-            # Validate session is still alive without triggering a fresh login
+            # Validate without triggering a fresh login
             cl.get_timeline_feed()
-            logged_in = True
-        except Exception:
-            logged_in = False
-    # Fall back to full login if session missing or expired
-    if not logged_in:
-        cl = Client()
-        cl.set_device(INSTAGRAM_DEVICE_SETTINGS)
+            print("[post_to_instagram] session reused successfully")
+            media = cl.photo_upload(image_path, caption)
+            # Refresh session after successful use
+            cl.dump_settings(session_file)
+            return media
+        except (ChallengeRequired, LoginRequired) as e:
+            print(f"[post_to_instagram] session expired or invalid ({type(e).__name__}). "
+                  "Please regenerate InstagramNews/instagram_session.json locally using: "
+                  "python InstagramNews/generate_session.py")
+            raise
+        except Exception as e:
+            print(f"[post_to_instagram] session validation failed: {e}. "
+                  "Please regenerate InstagramNews/instagram_session.json locally using: "
+                  "python InstagramNews/generate_session.py")
+            raise
+
+    # --- No session file: attempt password login (works locally, may fail on cloud) ---
+    print("[post_to_instagram] no session file found, attempting password login...")
+    try:
         cl.login(username, password)
         if session_file:
             cl.dump_settings(session_file)
+            print(f"[post_to_instagram] session saved to {session_file}")
+    except ChallengeRequired:
+        print("[post_to_instagram] challenge_required during password login. "
+              "Run python InstagramNews/generate_session.py locally to create a session file.")
+        raise
     media = cl.photo_upload(image_path, caption)
     return media
 

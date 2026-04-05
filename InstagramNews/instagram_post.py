@@ -19,7 +19,14 @@ def remove_hashtag(text, hashtag="#AldeaAI"):
 
 def fetch_overlay_image(url):
     try:
-        resp = requests.get(url, timeout=10)
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (X11; Linux x86_64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Safari/537.36'
+            )
+        }
+        resp = requests.get(url, timeout=10, headers=headers)
         resp.raise_for_status()
         img = Image.open(BytesIO(resp.content)).convert('RGBA')
         return img
@@ -28,7 +35,14 @@ def fetch_overlay_image(url):
 
 def extract_og_or_twitter_image(url):
     try:
-        resp = requests.get(url, timeout=10)
+        headers = {
+            'User-Agent': (
+                'Mozilla/5.0 (X11; Linux x86_64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Safari/537.36'
+            )
+        }
+        resp = requests.get(url, timeout=10, headers=headers)
         resp.raise_for_status()
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.text, 'html.parser')

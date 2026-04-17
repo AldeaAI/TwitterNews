@@ -33,5 +33,17 @@
     "country": "US",
     "country_code": 1,
     "locale": "en_US",
-    "timezone_offset": -14400
+    "timezone_offset": -14400,
+    "request_timeout": 1,
+    "public_request_retries_count": 3,
+    "public_request_retries_timeout": 2,
+    "session_retry_total": 3,
+    "session_retry_backoff_factor": 2,
+    "session_retry_statuses": [
+        429,
+        500,
+        502,
+        503,
+        504
+    ]
 }

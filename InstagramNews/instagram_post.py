@@ -3,6 +3,7 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 from io import BytesIO
+from urllib.parse import urljoin
 
 def extract_link(text):
     import re
@@ -64,7 +65,15 @@ def extract_og_or_twitter_image(url):
         if tw and tw.get('content'):
             print(f"[extract_og_or_twitter_image] found twitter:image: {tw['content']}")
             return tw['content']
-        print(f"[extract_og_or_twitter_image] no og:image or twitter:image found for {url}")
+        # Fallback: look for featured-image-figure class
+        featured_img = soup.find('img', class_='featured-image-figure')
+        if featured_img and featured_img.get('src'):
+            img_src = featured_img['src']
+            # Convert relative URL to absolute if needed
+            absolute_img_src = urljoin(url, img_src)
+            print(f"[extract_og_or_twitter_image] found featured-image-figure: {absolute_img_src}")
+            return absolute_img_src
+        print(f"[extract_og_or_twitter_image] no og:image, twitter:image, or featured-image-figure found for {url}")
     except Exception as e:
         print(f"[extract_og_or_twitter_image] failed: {e}")
     return None

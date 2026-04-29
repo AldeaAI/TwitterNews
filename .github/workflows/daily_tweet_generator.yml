@@ -2,7 +2,7 @@ name: Daily Tweet Generator
 
 on:
   schedule:
-    - cron: '0 8,14,20 * * *' # Runs at 8:00 and 20:00 UTC every day
+    - cron: '0 14,20 * * *' # Runs at 8:00 and 20:00 UTC every day
   workflow_dispatch: # Allows manual triggering
 
 jobs:

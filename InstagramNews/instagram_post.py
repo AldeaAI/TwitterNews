@@ -250,9 +250,21 @@ def post_to_instagram(image_path, caption, username=None, password=None, session
     if session_file and os.path.exists(session_file):
         try:
             cl.load_settings(session_file)
-            # login() with a loaded session reuses cookies instead of calling the login API
-            cl.login(username, password)
-            print("[post_to_instagram] session reused successfully")
+            # When we load a session, we don't need to login again - the session is already authenticated
+            # Only login again if the session is expired/challenged
+            try:
+                # Test if session is still valid by making a lightweight API call
+                cl.get_timeline_feed()
+                print("[post_to_instagram] session reused successfully")
+            except (ChallengeRequired, LoginRequired):
+                # Session expired/challenged, need to re-login
+                cl.login(username, password)
+                print("[post_to_instagram] session refreshed via login")
+            except Exception as e:
+                # Other error, try to login anyway as fallback
+                print(f"[post_to_instagram] session test failed: {e}, attempting login...")
+                cl.login(username, password)
+            
             media = cl.photo_upload(image_path, caption)
             # Refresh session after successful use
             cl.dump_settings(session_file)

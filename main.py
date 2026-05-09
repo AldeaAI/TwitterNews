@@ -211,43 +211,43 @@ def main():
     print(tweet)
     print("-----------------------\n")
 
-    # --- Instagram Post Generation and Optional Publishing ---
-    try:
-        instagram_background = "InstagramNews/Backgrounds/InstagramBackground_1.png"
-        instagram_output = "InstagramNews/generated_instagram_post.png"
-        roboto_font_path = "InstagramNews/Fonts/Roboto-Regular.ttf"
-        # Credentials can be set via environment or config if desired
-        import os
-        import toml
-        # Try to load Instagram credentials from environment, then config.toml
-        insta_user = os.getenv('INSTAGRAM_USER')
-        insta_pass = os.getenv('INSTAGRAM_PASS')
-        insta_session = os.getenv('INSTAGRAM_SESSION_FILE', 'InstagramNews/instagram_session.json')
-        if not insta_user or not insta_pass:
-            try:
-                config = toml.load('config.toml')
-                insta_user = insta_user or config.get('INSTAGRAM_USER')
-                insta_pass = insta_pass or config.get('INSTAGRAM_PASS')
-                insta_session = insta_session or config.get('INSTAGRAM_SESSION_FILE', 'InstagramNews/instagram_session.json')
-            except Exception:
-                pass
-        image_path, caption, post_result = create_and_optionally_post_instagram(
-            tweet,
-            instagram_output,
-            font_path=roboto_font_path,
-            username=insta_user,
-            password=insta_pass,
-            article_url=most_relevant.url,
-            session_file=insta_session
-        )
-        print(f"Instagram image generated at: {image_path}")
-        print(f"Instagram caption: {caption}")
-        if post_result:
-            print(f"Instagram post published: {post_result}")
-        else:
-            print("Instagram post not published (manual upload or credentials missing)")
-    except Exception as e:
-        print(f"Instagram post generation failed: {e}")
+    # # --- Instagram Post Generation and Optional Publishing ---
+    # try:
+    #     instagram_background = "InstagramNews/Backgrounds/InstagramBackground_1.png"
+    #     instagram_output = "InstagramNews/generated_instagram_post.png"
+    #     roboto_font_path = "InstagramNews/Fonts/Roboto-Regular.ttf"
+    #     # Credentials can be set via environment or config if desired
+    #     import os
+    #     import toml
+    #     # Try to load Instagram credentials from environment, then config.toml
+    #     insta_user = os.getenv('INSTAGRAM_USER')
+    #     insta_pass = os.getenv('INSTAGRAM_PASS')
+    #     insta_session = os.getenv('INSTAGRAM_SESSION_FILE', 'InstagramNews/instagram_session.json')
+    #     if not insta_user or not insta_pass:
+    #         try:
+    #             config = toml.load('config.toml')
+    #             insta_user = insta_user or config.get('INSTAGRAM_USER')
+    #             insta_pass = insta_pass or config.get('INSTAGRAM_PASS')
+    #             insta_session = insta_session or config.get('INSTAGRAM_SESSION_FILE', 'InstagramNews/instagram_session.json')
+    #         except Exception:
+    #             pass
+    #     image_path, caption, post_result = create_and_optionally_post_instagram(
+    #         tweet,
+    #         instagram_output,
+    #         font_path=roboto_font_path,
+    #         username=insta_user,
+    #         password=insta_pass,
+    #         article_url=most_relevant.url,
+    #         session_file=insta_session
+    #     )
+    #     print(f"Instagram image generated at: {image_path}")
+    #     print(f"Instagram caption: {caption}")
+    #     if post_result:
+    #         print(f"Instagram post published: {post_result}")
+    #     else:
+    #         print("Instagram post not published (manual upload or credentials missing)")
+    # except Exception as e:
+    #     print(f"Instagram post generation failed: {e}")
 
     # -------------------------------
     # --- Optional: Posting the tweet ---

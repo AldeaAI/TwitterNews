@@ -189,22 +189,22 @@ def main():
         print(f"Added #AldeaAI hashtag. New tweet length: {len(tweet)} characters\n")
 
 
-    # -------------------------------
-    # --- Add website source to tweet ---
-    # -------------------------------
+    # # -------------------------------
+    # # --- Add website source to tweet ---
+    # # -------------------------------
     
-    # Add the source website URL to provide attribution
-    if most_relevant.url:
-        # Extract domain from URL for cleaner display
-        domain = most_relevant.url
+    # # Add the source website URL to provide attribution
+    # if most_relevant.url:
+    #     # Extract domain from URL for cleaner display
+    #     domain = most_relevant.url
         
-        # Create attribution text
-        source_text = f" {domain}"
+    #     # Create attribution text
+    #     source_text = f" {domain}"
         
-        # Check if adding source would exceed character limit
-        tweet_with_source = f"{tweet}{source_text}"
-        tweet = tweet_with_source
-        print(f"Added source attribution. New tweet length: {len(tweet_with_hashtag) + 23} characters")
+    #     # Check if adding source would exceed character limit
+    #     tweet_with_source = f"{tweet}{source_text}"
+    #     tweet = tweet_with_source
+    #     print(f"Added source attribution. New tweet length: {len(tweet_with_hashtag) + 23} characters")
 
 
     print("\n--- Generated Full Tweet Text ---")

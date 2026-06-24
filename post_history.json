@@ -1,9 +1,5 @@
 [
     {
-        "url": "https://www.elcolombiano.com/opinion/columnistas/beatriz-de-majo-lo-inmobiliario-sigue-haciendo-agua-KA37736396",
-        "date": "2026-06-16T22:08:52.848002"
-    },
-    {
         "url": "https://www.elespectador.com/turismo/miami-registra-record-turistico-y-colombia-lidera-entre-los-visitantes-extranjeros/",
         "date": "2026-06-17T16:53:39.326384"
     },
@@ -58,5 +54,9 @@
     {
         "url": "https://www.elcolombiano.com/negocios/crisis-vivienda-vis-arrastra-sector-constructor-2026-camacol-JD38089563",
         "date": "2026-06-23T21:41:45.628244"
+    },
+    {
+        "url": "https://www.elpais.com.co/economia/busca-vivienda-o-invertir-bancolombia-ofrece-mas-de-7000-inmuebles-desde-40-millones-2241.html",
+        "date": "2026-06-24T16:18:08.986158"
     }
 ]

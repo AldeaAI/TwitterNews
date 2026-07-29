@@ -1,13 +1,5 @@
 [
     {
-        "url": "https://www.portafolio.co/mis-finanzas/vivienda/bogota-concentra-el-63-de-toda-la-demanda-inmobiliaria-registrada-en-el-pais-durante-el-primer-semestre-498335",
-        "date": "2026-07-21T21:04:59.706507"
-    },
-    {
-        "url": "https://www.larepublica.co/empresas/entrevista-con-alejandra-zapata-castano-presidenta-de-coninsa-sobre-nuevo-proyecto-watana-4438668",
-        "date": "2026-07-22T15:38:29.488300"
-    },
-    {
         "url": "https://www.lafm.com.co/economia/colombianos-prefieren-arrendar-que-comprar-vivienda-405349",
         "date": "2026-07-22T21:02:55.809924"
     },
@@ -58,5 +50,9 @@
     {
         "url": "https://www.larepublica.co/economia/expocamacol-proyecta-expectativas-de-negocios-superiores-a-us-1-198-millones-4445286",
         "date": "2026-07-28T21:04:29.241344"
+    },
+    {
+        "url": "https://www.eltiempo.com/colombia/medellin/el-plan-de-medellin-para-combatir-el-deficit-habitacional-y-regular-el-hospedaje-turistico-3574417",
+        "date": "2026-07-29T15:47:56.919653"
     }
 ]

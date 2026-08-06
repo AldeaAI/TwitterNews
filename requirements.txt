@@ -1,4 +1,4 @@
-perplexityai
+perplexityai==0.20.0
 requests
 toml
 tweepy

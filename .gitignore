@@ -9,3 +9,5 @@ __pycache__/
 
 # vscode files
 .vscode/
+# Instagram login session (contains account credentials; never commit)
+InstagramNews/instagram_session.json

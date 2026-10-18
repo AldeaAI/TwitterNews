@@ -5,6 +5,47 @@ from urllib.parse import urlparse
 TWEET_TARGET_CHARS = 245
 TWEET_MAX_CHARS = 280
 
+# Display names for the source hashtag, keyed by the domain's main label (no www, no TLD)
+SOURCE_NAMES = {
+    "elcolombiano": "ElColombiano",
+    "elespectador": "ElEspectador",
+    "eltiempo": "ElTiempo",
+    "larepublica": "LaRepublica",
+    "portafolio": "Portafolio",
+    "semana": "Semana",
+    "bluradio": "BluRadio",
+    "valoraanalitik": "ValoraAnalitik",
+    "noticiascaracol": "NoticiasCaracol",
+    "caracol": "Caracol",
+    "vanguardia": "Vanguardia",
+    "elheraldo": "ElHeraldo",
+    "publimetro": "Publimetro",
+    "rcnradio": "RCNRadio",
+    "elpais": "ElPais",
+    "forbes": "Forbes",
+    "wradio": "WRadio",
+    "lafm": "LaFM",
+}
+
+
+def source_hashtag(url: str) -> str:
+    """
+    Hashtag with the newspaper name for an article URL, e.g. '#ElColombiano'.
+    Hashtags can't contain spaces, so names are written in CamelCase.
+    Unknown sites fall back to their domain's main label, capitalized.
+    """
+    host = urlparse(url).netloc.lower().split(":")[0]
+    labels = [part for part in host.split(".") if part != "www"]
+    # Names like 'example.com.co' keep the name before the second-level suffix
+    if len(labels) >= 3 and labels[-2] in ("com", "co", "org", "net", "gov"):
+        main = labels[-3]
+    elif len(labels) >= 2:
+        main = labels[-2]
+    else:
+        main = host
+    name = SOURCE_NAMES.get(main, main.capitalize())
+    return f"#{name}"
+
 RESTRICTED_DOMAINS = [
     "eltiempo.com",
     "noticiascaracol.com",

@@ -1,7 +1,7 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Tuple
 from dataclasses import dataclass
 from perplexity import Perplexity
-from .utils import is_blacklisted
+from .utils import is_blacklisted, TWEET_TARGET_CHARS
 import json
 import re
 
@@ -121,55 +121,39 @@ def impact_analysis_agent(api_key: str, articles: List[Article]) -> Optional[Art
         return None
     return None
 
-def twitter_writer_agent(api_key: str, article: Article) -> str:
+TWEET_SHORT_MAX_CHARS = 90
+
+def _clean_text(text: str) -> str:
+    """Remove citations, '(N caracteres)' leftovers and surrounding quotes from model output."""
+    text = re.sub(r'\[\d+\]', '', text)
+    text = re.sub(r'\(\d+\s+caracteres?\)', '', text)
+    text = re.sub(r'\[\d+\s+caracteres?\]', '', text)
+    text = re.sub(r'\s+([.,;:])', r'\1', text)
+    return text.strip().strip('"').strip()
+
+def post_copy_agent(api_key: str, article: Article) -> Tuple[str, str]:
     """
-    Generates a Twitter post from the selected article using Perplexity's chat API.
-    Returns the generated tweet text.
+    One LLM call that writes both texts for the daily post:
+      - tweet: short tweet text (max 90 characters)
+      - image: the longer summary printed on the post image (aims for 245 characters)
+    Returns (tweet, image_text). Falls back to the article title and snippet when the answer
+    cannot be parsed.
     """
     client = Perplexity(api_key=api_key)
     system_prompt = (
         "Eres un analista de mercado experto en el sector inmobiliario. "
-        "Tu tarea es redactar un post para Twitter resumiendo la noticia proporcionada por el usuario. "
-        "El post debe tener un tono sobrio, inteligente y conciso. No utilices emojis ni signos de exclamación. "
-        "El post debe resumir el punto clave de la noticia y NO puede exceder los 245 caracteres, incluyendo espacios. Es obligatorio que tenga menos de 245 caracteres."
-        "No incluyas ninguna información adicional. No menciones el número de caracteres en el post. No incluyas referencias ni numeros de citaciones."
+        "A partir de la noticia del usuario redacta dos textos en español, con tono sobrio, inteligente y conciso. "
+        "No utilices emojis ni signos de exclamación. "
+        f"\"tweet\": un titular corto para el tweet, de máximo {TWEET_SHORT_MAX_CHARS} caracteres, incluyendo espacios. "
+        f"\"imagen\": un resumen del punto clave de la noticia, que irá sobre la imagen, de menos de {TWEET_TARGET_CHARS} caracteres, incluyendo espacios. "
+        "Responde solo con un objeto JSON con las claves \"tweet\" e \"imagen\". "
+        "No incluyas citaciones, números entre corchetes, ni información adicional, ni menciones el número de caracteres."
     )
-
     user_prompt = (
-        "Redacta el post de Twitter (tuit) utilizando la siguiente información de la noticia:\n\n"
-        f"Noticia:\n"
+        "Redacta los textos a partir de la siguiente noticia:\n\n"
         f"Título: {article.title}\n"
         f"Contenido: {article.snippet}\n"
         f"Fuente: {article.url}"
-    )
-
-    completion = client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                    ], 
-                model="sonar",
-
-    )
-    return _completion_text(completion)
-
-HEADLINE_MAX_CHARS = 90
-
-def headline_agent(api_key: str, article: Article) -> str:
-    """
-    Writes a short headline (max 90 characters) for the post image.
-    Falls back to the article title when the model's answer is empty or too long.
-    """
-    client = Perplexity(api_key=api_key)
-    system_prompt = (
-        "Eres un editor de noticias del sector inmobiliario. "
-        "Escribe un titular sobrio e informativo para una imagen de redes sociales. "
-        f"Máximo {HEADLINE_MAX_CHARS} caracteres, incluyendo espacios. Sin emojis, sin signos de exclamación, "
-        "sin comillas, sin citaciones ni numeros entre corchetes. Solo escribe el titular."
-    )
-    user_prompt = (
-        f"Título: {article.title}\n"
-        f"Contenido: {article.snippet}"
     )
     completion = client.chat.completions.create(
         messages=[
@@ -178,12 +162,25 @@ def headline_agent(api_key: str, article: Article) -> str:
         ],
         model="sonar",
     )
-    headline = _completion_text(completion)
-    headline = re.sub(r'\[\d+\]', '', headline).strip().strip('"').strip()
-    if not headline or len(headline) > HEADLINE_MAX_CHARS:
-        print(f"[headline_agent] headline unusable ({len(headline)} chars), using article title")
-        return article.title
-    return headline
+    raw = _completion_text(completion)
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    try:
+        data = json.loads(match.group(0)) if match else {}
+    except json.JSONDecodeError:
+        data = {}
+
+    tweet = _clean_text(str(data.get("tweet", "") or ""))
+    image_text = _clean_text(str(data.get("imagen", "") or ""))
+
+    if not tweet or len(tweet) > TWEET_SHORT_MAX_CHARS:
+        print(f"[post_copy_agent] tweet unusable ({len(tweet)} chars), using article title")
+        tweet = _clean_text(article.title)
+        if len(tweet) > TWEET_SHORT_MAX_CHARS:
+            tweet = tweet[:TWEET_SHORT_MAX_CHARS].rsplit(" ", 1)[0]
+    if not image_text:
+        print("[post_copy_agent] image text empty, using article snippet")
+        image_text = _clean_text(article.snippet) or _clean_text(article.title)
+    return tweet, image_text
 
 def tweet_optimizer_agent(api_key: str, tweet_text: str) -> str:
     """

@@ -277,16 +277,18 @@ def main():
         try:
             if not posted_id:
                 posted_id = post_tweet(tweet)
-            if posted_id:
-                print(f"Posted tweet id: {posted_id}")
-            else:
-                print("Tweet was not posted.")
         except Exception as e:
             # Be explicit about failures: often indicates permissions (403) or invalid credentials
             print(f"Failed to post tweet: {e}")
 
-    # --- History: Persist the posted URL ---
-    # Save the article to the history so it is not posted again in the short term
+    # Only a successful post marks the article as used. A failed post leaves it in the
+    # history file unchanged, so the next run can pick it up again, and the run fails
+    # so the problem shows up in GitHub Actions.
+    if not posted_id:
+        print("Tweet was not posted. Article NOT saved to history.")
+        sys.exit(1)
+
+    print(f"Posted tweet id: {posted_id}")
     save_history(most_relevant.url, history)
     print(f"\nArticle '{most_relevant.title}' saved to history.")
 

@@ -32,9 +32,13 @@ from twitternews.twitter_utils import post_tweet, post_tweet_with_image
 from twitternews.image_post import build_post_image
 from twitternews.utils import TWEET_TARGET_CHARS, TWEET_MAX_CHARS, source_hashtag
 import os
-import tempfile
+import json
+from datetime import datetime
+from twitternews.instagram_publish import LATEST_POST, POSTS_DIR
 import re
 from InstagramNews.instagram_post import create_and_optionally_post_instagram
+
+
 
 def main():
     """
@@ -242,24 +246,30 @@ def main():
     # It is currently enabled on main when valid TWITTER_* credentials are present. If you prefer to
     # TEST LOCALLY without posting, comment out the call to post_tweet or remove the TWITTER_* env entries.
     # The post is published as an image: square background from the article, headline, logo.
-    # The image is written to a temporary folder so it never ends up in the repo.
-    # If the image or its upload fails, the plain text tweet is posted instead.
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        image_path = os.path.join(tmp_dir, "post.png")
-        try:
-            build_post_image(image_text, most_relevant.url, image_path)
-            print(f"Post image created: {image_path}")
-            posted_id = post_tweet_with_image(tweet, image_path)
-        except Exception as e:
-            print(f"Image post failed, falling back to text-only tweet: {e}")
-            posted_id = None
+    # The image is saved in the repo so the workflow can commit it and Instagram can fetch it.
+    # JPEG is the format the Instagram publishing API accepts
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    image_path = os.path.join(POSTS_DIR, f"{stamp}.jpg")
+    os.makedirs(POSTS_DIR, exist_ok=True)
+    posted_id = None
+    try:
+        build_post_image(image_text, image_path)
+        print(f"Post image created: {image_path}")
+        posted_id = post_tweet_with_image(tweet, image_path)
+    except Exception as e:
+        print(f"Image post failed, falling back to text-only tweet: {e}")
 
-        try:
-            if not posted_id:
-                posted_id = post_tweet(tweet)
-        except Exception as e:
-            # Be explicit about failures: often indicates permissions (403) or invalid credentials
-            print(f"Failed to post tweet: {e}")
+    # Instagram caption: the longer text plus the hashtags (Instagram captions can't link)
+    caption = f"{image_text}\n\n#AldeaAI {source_tag}"
+    with open(LATEST_POST, "w", encoding="utf-8") as f:
+        json.dump({"image": image_path, "caption": caption}, f, ensure_ascii=False, indent=2)
+
+    try:
+        if not posted_id:
+            posted_id = post_tweet(tweet)
+    except Exception as e:
+        # Be explicit about failures: often indicates permissions (403) or invalid credentials
+        print(f"Failed to post tweet: {e}")
 
     # Only a successful post marks the article as used. A failed post leaves it in the
     # history file unchanged, so the next run can pick it up again, and the run fails

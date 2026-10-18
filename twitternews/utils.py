@@ -1,5 +1,10 @@
 from urllib.parse import urlparse
 
+# Tweet length: the writer and optimizer aim for TARGET characters (kept short on purpose),
+# but a tweet up to MAX characters is still accepted, since X's standard limit is 280.
+TWEET_TARGET_CHARS = 245
+TWEET_MAX_CHARS = 280
+
 RESTRICTED_DOMAINS = [
     "eltiempo.com",
     "noticiascaracol.com",

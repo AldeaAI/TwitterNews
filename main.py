@@ -27,8 +27,12 @@ Usage:
 import sys
 from twitternews.config import get_api_key, get_twitter_credentials, load_sources
 from twitternews.history import load_history, save_history
-from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent, tweet_optimizer_agent
-from twitternews.twitter_utils import post_tweet
+from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent, tweet_optimizer_agent, headline_agent
+from twitternews.twitter_utils import post_tweet, post_tweet_with_image
+from twitternews.image_post import build_post_image
+from twitternews.utils import TWEET_TARGET_CHARS, TWEET_MAX_CHARS
+import os
+import tempfile
 import re
 from InstagramNews.instagram_post import create_and_optionally_post_instagram
 
@@ -156,27 +160,26 @@ def main():
     print(tweet)
     print("-----------------------\n")
 
-    # Check if tweet exceeds 245 characters (including spaces)
-    if len(tweet) > 245:
-        print(f"Warning: Tweet is {len(tweet)} characters, exceeds 245 character limit.")
-        print("Attempting to optimize tweet to fit within limit...")
+    # Tweets aim for TWEET_TARGET_CHARS (including spaces). Longer ones are optimized once,
+    # and the shorter version is kept as long as it is within TWEET_MAX_CHARS.
+    if len(tweet) > TWEET_TARGET_CHARS:
+        print(f"Warning: Tweet is {len(tweet)} characters, exceeds the {TWEET_TARGET_CHARS} target.")
+        print("Attempting to optimize tweet...")
 
-        tweet = tweet_optimizer_agent(api_key, tweet)
-        
-        print("optimised tweet length:", len(tweet))
-
+        optimized = tweet_optimizer_agent(api_key, tweet)
+        print("optimised tweet length:", len(optimized))
         print("\n--- Optimized Tweet Text ---")
-        print(tweet)
+        print(optimized)
         print("-----------------------\n")
 
-        if len(tweet) > 245:
-            print(f"Error: Optimized tweet is still {len(tweet)} characters, exceeds 245 character limit.")
-            print("Cannot proceed with posting. Please review the optimization logic.")
-            return
-        # print("Consider regenerating or manually shortening the tweet.")
-        # return
-    else:
-        print(f"Tweet length: {len(tweet)} characters (within 245 character limit)")
+        candidates = [t for t in (tweet, optimized) if t]
+        tweet = min(candidates, key=len)
+
+    if len(tweet) > TWEET_MAX_CHARS:
+        print(f"Error: Tweet is {len(tweet)} characters, exceeds the {TWEET_MAX_CHARS} character limit.")
+        print("Cannot proceed with posting. Please review the optimization logic.")
+        return
+    print(f"Tweet length: {len(tweet)} characters (limit {TWEET_MAX_CHARS})")
     # -------------------------------
     # --- Add hashtag to tweet ---
     # -------------------------------
@@ -256,18 +259,36 @@ def main():
     # The following code posts the generated tweet to Twitter using credentials from the environment.
     # It is currently enabled on main when valid TWITTER_* credentials are present. If you prefer to
     # TEST LOCALLY without posting, comment out the call to post_tweet or remove the TWITTER_* env entries.
-    try:
-        posted_id = post_tweet(tweet)
-        if posted_id:
-            print(f"Posted tweet id: {posted_id}")
-        else:
-            print("Tweet was not posted.")
-    except Exception as e:
-        # Be explicit about failures: often indicates permissions (403) or invalid credentials
-        print(f"Failed to post tweet: {e}")
+    # The post is published as an image: square background from the article, headline, logo.
+    # The image is written to a temporary folder so it never ends up in the repo.
+    # If the image or its upload fails, the plain text tweet is posted instead.
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        image_path = os.path.join(tmp_dir, "post.png")
+        try:
+            headline = headline_agent(api_key, most_relevant)
+            print(f"Image headline: {headline}")
+            build_post_image(headline, most_relevant.url, image_path)
+            print(f"Post image created: {image_path}")
+            posted_id = post_tweet_with_image(tweet, image_path)
+        except Exception as e:
+            print(f"Image post failed, falling back to text-only tweet: {e}")
+            posted_id = None
 
-    # --- History: Persist the posted URL ---
-    # Save the article to the history so it is not posted again in the short term
+        try:
+            if not posted_id:
+                posted_id = post_tweet(tweet)
+        except Exception as e:
+            # Be explicit about failures: often indicates permissions (403) or invalid credentials
+            print(f"Failed to post tweet: {e}")
+
+    # Only a successful post marks the article as used. A failed post leaves it in the
+    # history file unchanged, so the next run can pick it up again, and the run fails
+    # so the problem shows up in GitHub Actions.
+    if not posted_id:
+        print("Tweet was not posted. Article NOT saved to history.")
+        sys.exit(1)
+
+    print(f"Posted tweet id: {posted_id}")
     save_history(most_relevant.url, history)
     print(f"\nArticle '{most_relevant.title}' saved to history.")
 

@@ -153,6 +153,38 @@ def twitter_writer_agent(api_key: str, article: Article) -> str:
     )
     return _completion_text(completion)
 
+HEADLINE_MAX_CHARS = 90
+
+def headline_agent(api_key: str, article: Article) -> str:
+    """
+    Writes a short headline (max 90 characters) for the post image.
+    Falls back to the article title when the model's answer is empty or too long.
+    """
+    client = Perplexity(api_key=api_key)
+    system_prompt = (
+        "Eres un editor de noticias del sector inmobiliario. "
+        "Escribe un titular sobrio e informativo para una imagen de redes sociales. "
+        f"Máximo {HEADLINE_MAX_CHARS} caracteres, incluyendo espacios. Sin emojis, sin signos de exclamación, "
+        "sin comillas, sin citaciones ni numeros entre corchetes. Solo escribe el titular."
+    )
+    user_prompt = (
+        f"Título: {article.title}\n"
+        f"Contenido: {article.snippet}"
+    )
+    completion = client.chat.completions.create(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        model="sonar",
+    )
+    headline = _completion_text(completion)
+    headline = re.sub(r'\[\d+\]', '', headline).strip().strip('"').strip()
+    if not headline or len(headline) > HEADLINE_MAX_CHARS:
+        print(f"[headline_agent] headline unusable ({len(headline)} chars), using article title")
+        return article.title
+    return headline
+
 def tweet_optimizer_agent(api_key: str, tweet_text: str) -> str:
     """
     Takes a tweet that exceeds 245 characters and optimizes it to be under 245 characters.

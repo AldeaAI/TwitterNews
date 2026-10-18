@@ -48,3 +48,49 @@ def post_tweet(text: str) -> Optional[str]:
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
         return None
+
+
+def post_tweet_with_image(text: str, image_path: str) -> Optional[str]:
+    """
+    Upload `image_path` to X and post `text` with that image attached.
+    Media upload uses the v1.1 endpoint (OAuth 1.0a); the tweet itself uses the v2 Client.
+    Returns the tweet id string on success, None on failure.
+    """
+    TWITTER_API_KEY = os.environ.get("TWITTER_API_KEY")
+    TWITTER_API_SECRET = os.environ.get("TWITTER_API_SECRET")
+    TWITTER_ACCESS_TOKEN = os.environ.get("TWITTER_ACCESS_TOKEN")
+    TWITTER_ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
+
+    if not all([TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET]):
+        raise RuntimeError("Missing Twitter credentials. Ensure TWITTER_* vars are set in env or config.toml loaded into env.")
+
+    try:
+        auth = tweepy.OAuth1UserHandler(
+            TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
+        )
+        media = tweepy.API(auth).media_upload(filename=image_path)
+
+        client = tweepy.Client(
+            consumer_key=TWITTER_API_KEY,
+            consumer_secret=TWITTER_API_SECRET,
+            access_token=TWITTER_ACCESS_TOKEN,
+            access_token_secret=TWITTER_ACCESS_TOKEN_SECRET,
+        )
+        response = client.create_tweet(text=text, media_ids=[media.media_id])
+
+        data = getattr(response, "data", None)
+        tweet_id = data.get("id") if isinstance(data, dict) else getattr(data, "id", None)
+        if tweet_id:
+            print("✅ Successfully posted a tweet with image!")
+            print(f"Tweet ID: {tweet_id}")
+            print(f"View Tweet: https://twitter.com/i/web/status/{tweet_id}")
+            return str(tweet_id)
+        print("❌ Post failed: No tweet id returned.")
+        return None
+
+    except tweepy.TweepyException as e:
+        print(f"❌ An error occurred during the API call: {e}")
+        return None
+    except Exception as e:
+        print(f"❌ An unexpected error occurred: {e}")
+        return None

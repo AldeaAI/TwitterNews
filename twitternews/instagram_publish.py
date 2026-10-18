@@ -27,7 +27,8 @@ import time
 import requests
 
 GRAPH_VERSION = "v23.0"
-GRAPH_URL = f"https://graph.facebook.com/{GRAPH_VERSION}"
+# Instagram API with Instagram Login: the token from the Meta app is an Instagram user token
+GRAPH_URL = f"https://graph.instagram.com/{GRAPH_VERSION}"
 INSTAGRAM_RELEASE_TAG = "instagram-images"
 
 POSTS_DIR = os.path.join(tempfile.gettempdir(), "twitternews_posts")

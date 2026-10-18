@@ -4,7 +4,7 @@ TwitterNews Main Orchestrator
 This script orchestrates a 3-agent pipeline to:
   1. Search news for Colombian real estate articles (news_research_agent)
   2. Analyze impact and select the most relevant article (impact_analysis_agent)
-  3. Generate a Twitter post for the selected article (twitter_writer_agent)
+  3. Generate the post copy for the selected article in one call (post_copy_agent)
   4. Optionally post the generated tweet to Twitter (post_tweet)
   5. Save the posted article to history
 
@@ -27,10 +27,10 @@ Usage:
 import sys
 from twitternews.config import get_api_key, get_twitter_credentials, load_sources
 from twitternews.history import load_history, save_history
-from twitternews.agents import news_research_agent, impact_analysis_agent, twitter_writer_agent, tweet_optimizer_agent, headline_agent
+from twitternews.agents import news_research_agent, impact_analysis_agent, post_copy_agent, tweet_optimizer_agent
 from twitternews.twitter_utils import post_tweet, post_tweet_with_image
 from twitternews.image_post import build_post_image
-from twitternews.utils import TWEET_TARGET_CHARS, TWEET_MAX_CHARS
+from twitternews.utils import TWEET_TARGET_CHARS, TWEET_MAX_CHARS, source_hashtag
 import os
 import tempfile
 import re
@@ -46,7 +46,7 @@ def main():
       3. Agent Pipeline:
            - Agent 1: Call news_research_agent to find candidate articles
            - Agent 2: Call impact_analysis_agent to pick most relevant article
-           - Agent 3: Call twitter_writer_agent to generate the tweet text
+           - Agent 3: Call post_copy_agent to generate the tweet and the image text
       4. Posting (optional): post_tweet to Twitter (requires TWITTER_* env keys)
       5. History: persist the posted article to avoid reposting
     """
@@ -129,51 +129,27 @@ def main():
 
 
     # -------------------------------
-    # --- Agent 3: Twitter Writer Agent ---
+    # --- Agent 3: Post copy (one LLM call) ---
     # -------------------------------
 
-    # Generate a concise Twitter post recommended for X (Twitter)
-    print("\n[Agent 3/3] Generating Twitter post...")
-    tweet = twitter_writer_agent(api_key, most_relevant)
+    # One call returns the short tweet text and the longer text that goes on the image
+    print("\n[Agent 3/3] Generating post copy...")
+    tweet, image_text = post_copy_agent(api_key, most_relevant)
+    print(f"\n--- Tweet Text ({len(tweet)} characters) ---")
+    print(tweet)
+    print(f"\n--- Image Text ({len(image_text)} characters) ---")
+    print(image_text)
     print("-----------------------\n")
 
-
-    print("\n--- Generated Tweet Text ---")
-    print(tweet)
-    # print("-----------------------\n")
-
-    # -------------------------------
-    # --- Verify tweet length ---
-    # -------------------------------
-
-    # Remove reference citations like [1], [2], etc. from the tweet
-    tweet = re.sub(r'\[\d+\]', '', tweet).strip()
-    print("\n--- Tweet Text After Removing Citations ---")
-    print(tweet)
-    print("-----------------------\n")
-
-    # Remove "(number caracteres)" or "[number caracteres]" text if present
-    tweet = re.sub(r'\(\d+\s+caracteres?\)', '', tweet).strip()
-    tweet = re.sub(r'\[\d+\s+caracteres?\]', '', tweet).strip()
-  
-    print("\n--- Tweet Text After Removing Character Count ---")
-    print(tweet)
-    print("-----------------------\n")
-
-    # Tweets aim for TWEET_TARGET_CHARS (including spaces). Longer ones are optimized once,
-    # and the shorter version is kept as long as it is within TWEET_MAX_CHARS.
-    if len(tweet) > TWEET_TARGET_CHARS:
-        print(f"Warning: Tweet is {len(tweet)} characters, exceeds the {TWEET_TARGET_CHARS} target.")
-        print("Attempting to optimize tweet...")
-
-        optimized = tweet_optimizer_agent(api_key, tweet)
-        print("optimised tweet length:", len(optimized))
-        print("\n--- Optimized Tweet Text ---")
-        print(optimized)
-        print("-----------------------\n")
-
-        candidates = [t for t in (tweet, optimized) if t]
-        tweet = min(candidates, key=len)
+    # The image text aims for TWEET_TARGET_CHARS. Longer ones are optimized once,
+    # and the shorter version is kept.
+    if len(image_text) > TWEET_TARGET_CHARS:
+        print(f"Warning: Image text is {len(image_text)} characters, exceeds the {TWEET_TARGET_CHARS} target.")
+        print("Attempting to optimize image text...")
+        optimized = tweet_optimizer_agent(api_key, image_text)
+        candidates = [t for t in (image_text, optimized) if t]
+        image_text = min(candidates, key=len)
+        print(f"Image text after optimization: {len(image_text)} characters")
 
     if len(tweet) > TWEET_MAX_CHARS:
         print(f"Error: Tweet is {len(tweet)} characters, exceeds the {TWEET_MAX_CHARS} character limit.")
@@ -190,6 +166,12 @@ def main():
         tweet_with_hashtag = f"{tweet} #AldeaAI"
         tweet = tweet_with_hashtag
         print(f"Added #AldeaAI hashtag. New tweet length: {len(tweet)} characters\n")
+
+    # Add the newspaper name as a second hashtag, e.g. #ElColombiano
+    source_tag = source_hashtag(most_relevant.url)
+    if source_tag not in tweet:
+        tweet = f"{tweet} {source_tag}"
+        print(f"Added source hashtag {source_tag}. New tweet length: {len(tweet)} characters\n")
 
 
     # # -------------------------------
@@ -265,9 +247,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp_dir:
         image_path = os.path.join(tmp_dir, "post.png")
         try:
-            headline = headline_agent(api_key, most_relevant)
-            print(f"Image headline: {headline}")
-            build_post_image(headline, most_relevant.url, image_path)
+            build_post_image(image_text, most_relevant.url, image_path)
             print(f"Post image created: {image_path}")
             posted_id = post_tweet_with_image(tweet, image_path)
         except Exception as e:

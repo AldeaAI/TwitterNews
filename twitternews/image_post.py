@@ -1,10 +1,10 @@
 """
 Square (1080x1080) text-only images for the daily post. There are 12 layouts that share the
-brand palette, logo and fonts; each run uses a different one so the posts don't all look the same.
+brand palette, logo and fonts; each post picks one at random.
 No article photos are used, to avoid copyright issues.
 """
 import os
-from datetime import datetime, timezone
+import random
 from typing import Callable, List, Optional
 
 from PIL import Image, ImageDraw, ImageFont
@@ -12,7 +12,8 @@ from PIL import Image, ImageDraw, ImageFont
 ASSETS = os.path.join(os.path.dirname(__file__), "..", "InstagramNews")
 FONT_BOLD = os.path.join(ASSETS, "Fonts", "Roboto-Bold.ttf")
 FONT_REG = os.path.join(ASSETS, "Fonts", "Roboto-Regular.ttf")
-LOGO_PATH = os.path.join(ASSETS, "Backgrounds", "LogoOriginal.png")
+LOGO_ON_LIGHT = os.path.join(ASSETS, "Backgrounds", "LogoOnLight.png")
+LOGO_ON_DARK = os.path.join(ASSETS, "Backgrounds", "LogoOnDark.png")
 
 SIZE = 1080
 MARGIN = 80
@@ -25,7 +26,6 @@ WHITE = (255, 255, 255, 255)
 
 KICKER = "MERCADO INMOBILIARIO"
 HANDLE = "@AldeaAI"
-RUNS_PER_DAY = 2  # the workflow runs twice a day (14:00 and 20:00 UTC)
 
 _BOLD_CACHE = {}
 
@@ -37,12 +37,13 @@ def _font(path: str, size: int) -> ImageFont.FreeTypeFont:
     return _BOLD_CACHE[key]
 
 
-def _logo_tile(size: int, pad: int) -> Image.Image:
-    """The Aldea logo on a white rounded square."""
+def _logo(size: int, on_dark: bool = False) -> Image.Image:
+    """The Aldea logo with a transparent background, centered in a `size` square."""
+    logo = Image.open(LOGO_ON_DARK if on_dark else LOGO_ON_LIGHT).convert("RGBA")
+    scale = size / max(logo.size)
+    logo = logo.resize((round(logo.width * scale), round(logo.height * scale)), Image.LANCZOS)
     tile = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    ImageDraw.Draw(tile).rounded_rectangle([(0, 0), (size - 1, size - 1)], radius=size // 7, fill=WHITE)
-    logo = Image.open(LOGO_PATH).convert("RGBA").resize((size - 2 * pad,) * 2, Image.LANCZOS)
-    tile.alpha_composite(logo, (pad, pad))
+    tile.alpha_composite(logo, ((size - logo.width) // 2, (size - logo.height) // 2))
     return tile
 
 
@@ -130,7 +131,7 @@ def _layout_1(text):  # off-white, cyan top-left and blue bottom-right triangles
     c = _new(OFF_WHITE); d = ImageDraw.Draw(c)
     d.polygon([(0, 0), (300, 0), (0, 240)], fill=CYAN)
     d.polygon([(SIZE, SIZE), (SIZE, 800), (640, SIZE)], fill=BLUE)
-    c.alpha_composite(_logo_tile(170, 16), (SIZE - 170 - MARGIN + 10, MARGIN - 10))
+    c.alpha_composite(_logo(170), (SIZE - 170 - MARGIN + 10, MARGIN - 10))
     _kicker(c, MARGIN, 400, BLUE)
     _headline(c, text, MARGIN, 460, SIZE - 2 * MARGIN - 120, 900, DARK)
     _pill(c, MARGIN, 960, BLUE, WHITE)
@@ -140,7 +141,7 @@ def _layout_1(text):  # off-white, cyan top-left and blue bottom-right triangles
 def _layout_2(text):  # off-white with a thin blue bar on top, logo left
     c = _new(OFF_WHITE)
     ImageDraw.Draw(c).rectangle([(0, 0), (SIZE, 16)], fill=BLUE)
-    c.alpha_composite(_logo_tile(150, 14), (MARGIN, MARGIN + 20))
+    c.alpha_composite(_logo(150), (MARGIN, MARGIN + 20))
     _kicker(c, MARGIN, 420, CYAN)
     _headline(c, text, MARGIN, 480, SIZE - 2 * MARGIN, 900, DARK)
     _pill(c, MARGIN, 960, DARK, WHITE)
@@ -150,7 +151,7 @@ def _layout_2(text):  # off-white with a thin blue bar on top, logo left
 def _layout_3(text):  # dark, cyan top-left corner, logo top-right
     c = _new(DARK)
     ImageDraw.Draw(c).polygon([(0, 0), (260, 0), (0, 200)], fill=CYAN)
-    c.alpha_composite(_logo_tile(170, 16), (SIZE - 170 - MARGIN + 10, MARGIN - 10))
+    c.alpha_composite(_logo(170, on_dark=True), (SIZE - 170 - MARGIN + 10, MARGIN - 10))
     _kicker(c, MARGIN, 400, CYAN)
     _headline(c, text, MARGIN, 460, SIZE - 2 * MARGIN, 900, WHITE)
     _pill(c, MARGIN, 960, BLUE, WHITE)
@@ -159,18 +160,18 @@ def _layout_3(text):  # dark, cyan top-left corner, logo top-right
 
 def _layout_4(text):  # dark, blue bottom-right corner, logo bottom-left
     c = _new(DARK)
-    ImageDraw.Draw(c).polygon([(SIZE, SIZE), (SIZE, 560), (560, SIZE)], fill=BLUE)
-    c.alpha_composite(_logo_tile(130, 12), (MARGIN, MARGIN))
+    ImageDraw.Draw(c).polygon([(SIZE, SIZE), (SIZE, 680), (680, SIZE)], fill=BLUE)
+    c.alpha_composite(_logo(130, on_dark=True), (MARGIN, MARGIN))
     _kicker(c, MARGIN, 320, CYAN)
     _headline(c, text, MARGIN, 380, SIZE - 2 * MARGIN - 200, 900, WHITE)
     _pill(c, MARGIN, 960, WHITE, DARK)
     return c
 
 
-def _layout_5(text):  # dark, cyan band across the top third, logo centered in the band
+def _layout_5(text):  # dark, blue band across the top third, logo centered in the band
     c = _new(DARK)
-    ImageDraw.Draw(c).rectangle([(0, 0), (SIZE, 300)], fill=CYAN)
-    c.alpha_composite(_logo_tile(180, 18), ((SIZE - 180) // 2, 60))
+    ImageDraw.Draw(c).rectangle([(0, 0), (SIZE, 300)], fill=BLUE)
+    c.alpha_composite(_logo(180, on_dark=True), ((SIZE - 180) // 2, 60))
     _kicker(c, MARGIN, 380, CYAN)
     _headline(c, text, MARGIN, 440, SIZE - 2 * MARGIN, 900, WHITE)
     _pill(c, MARGIN, 960, BLUE, WHITE)
@@ -179,7 +180,7 @@ def _layout_5(text):  # dark, cyan band across the top third, logo centered in t
 
 def _layout_6(text):  # diagonal blue-to-navy gradient, white text, logo top-right
     c = _gradient(BLUE, NAVY)
-    c.alpha_composite(_logo_tile(150, 14), (SIZE - 150 - MARGIN + 10, MARGIN - 10))
+    c.alpha_composite(_logo(150, on_dark=True), (SIZE - 150 - MARGIN + 10, MARGIN - 10))
     _kicker(c, MARGIN, 400, WHITE)
     _headline(c, text, MARGIN, 460, SIZE - 2 * MARGIN, 900, WHITE)
     _pill(c, MARGIN, 960, WHITE, BLUE)
@@ -188,7 +189,7 @@ def _layout_6(text):  # diagonal blue-to-navy gradient, white text, logo top-rig
 
 def _layout_7(text):  # off-white, centered, logo centered at the top
     c = _new(OFF_WHITE)
-    c.alpha_composite(_logo_tile(190, 20), ((SIZE - 190) // 2, 90))
+    c.alpha_composite(_logo(190), ((SIZE - 190) // 2, 90))
     _kicker(c, MARGIN, 400, BLUE, "center", SIZE - 2 * MARGIN)
     _headline(c, text, MARGIN, 460, SIZE - 2 * MARGIN, 880, DARK, "center")
     _pill(c, 0, 960, BLUE, WHITE, "center", SIZE)
@@ -198,7 +199,7 @@ def _layout_7(text):  # off-white, centered, logo centered at the top
 def _layout_8(text):  # off-white, cyan vertical bar, text indented
     c = _new(OFF_WHITE)
     ImageDraw.Draw(c).rectangle([(MARGIN, 380), (MARGIN + 14, 880)], fill=CYAN)
-    c.alpha_composite(_logo_tile(140, 12), (SIZE - 140 - MARGIN + 10, MARGIN - 10))
+    c.alpha_composite(_logo(140), (SIZE - 140 - MARGIN + 10, MARGIN - 10))
     _kicker(c, MARGIN + 50, 380, BLUE)
     _headline(c, text, MARGIN + 50, 440, SIZE - 2 * MARGIN - 120, 900, DARK)
     _pill(c, MARGIN + 50, 960, DARK, WHITE)
@@ -207,7 +208,7 @@ def _layout_8(text):  # off-white, cyan vertical bar, text indented
 
 def _layout_9(text):  # dark, centered, logo centered at the top
     c = _new(DARK)
-    c.alpha_composite(_logo_tile(170, 16), ((SIZE - 170) // 2, 80))
+    c.alpha_composite(_logo(170, on_dark=True), ((SIZE - 170) // 2, 80))
     _kicker(c, MARGIN, 360, CYAN, "center", SIZE - 2 * MARGIN)
     _headline(c, text, MARGIN, 420, SIZE - 2 * MARGIN, 900, WHITE, "center")
     _pill(c, 0, 960, CYAN, DARK, "center", SIZE)
@@ -217,30 +218,30 @@ def _layout_9(text):  # dark, centered, logo centered at the top
 def _layout_10(text):  # off-white with a blue block behind the headline
     c = _new(OFF_WHITE)
     ImageDraw.Draw(c).rectangle([(0, 430), (SIZE, 850)], fill=BLUE)
-    c.alpha_composite(_logo_tile(150, 14), (MARGIN, MARGIN + 20))
+    c.alpha_composite(_logo(150), (MARGIN, MARGIN + 20))
     _kicker(c, MARGIN, 360, BLUE)
-    _headline(c, text, MARGIN, 470, SIZE - 2 * MARGIN, 840, WHITE)
-    _pill(c, MARGIN, 930, OFF_WHITE, BLUE)
+    _headline(c, text, MARGIN, 470, SIZE - 2 * MARGIN, 850, WHITE)
+    _pill(c, MARGIN, 930, BLUE, WHITE)
     return c
 
 
 def _layout_11(text):  # dark, cyan diagonal line near the bottom
     c = _new(DARK)
     ImageDraw.Draw(c).polygon([(0, 900), (SIZE, 780), (SIZE, 820), (0, 920)], fill=CYAN)
-    c.alpha_composite(_logo_tile(150, 14), (SIZE - 150 - MARGIN + 10, MARGIN - 10))
+    c.alpha_composite(_logo(150, on_dark=True), (SIZE - 150 - MARGIN + 10, MARGIN - 10))
     _kicker(c, MARGIN, 250, CYAN)
     _headline(c, text, MARGIN, 310, SIZE - 2 * MARGIN, 700, WHITE)
     _pill(c, MARGIN, 960, BLUE, WHITE)
     return c
 
 
-def _layout_12(text):  # off-white top, blue bottom with the logo on the seam
+def _layout_12(text):  # off-white top with the logo, blue bottom with the headline
     c = _new(OFF_WHITE)
-    ImageDraw.Draw(c).rectangle([(0, 640), (SIZE, SIZE)], fill=BLUE)
-    c.alpha_composite(_logo_tile(190, 20), ((SIZE - 190) // 2, 640 - 95))
+    ImageDraw.Draw(c).rectangle([(0, 400), (SIZE, SIZE)], fill=BLUE)
+    c.alpha_composite(_logo(190), ((SIZE - 190) // 2, 60))
     _kicker(c, MARGIN, 300, BLUE, "center", SIZE - 2 * MARGIN)
-    _headline(c, text, MARGIN, 770, SIZE - 2 * MARGIN, 900, WHITE, "center", range(56, 41, -2))
-    _pill(c, 0, 960, WHITE, BLUE, "center", SIZE)
+    _headline(c, text, MARGIN, 450, SIZE - 2 * MARGIN, 950, WHITE, "center")
+    _pill(c, 0, 970, WHITE, BLUE, "center", SIZE)
     return c
 
 
@@ -250,13 +251,9 @@ LAYOUTS: List[Callable[[str], Image.Image]] = [
 ]
 
 
-def layout_index(now: Optional[datetime] = None) -> int:
-    """Pick the layout for this run: a different one for each run, cycling through all of them."""
-    now = now or datetime.now(timezone.utc)
-    # Two runs a day: the first run of the day gets an even slot, the second an odd one
-    run_of_day = 0 if now.hour < 17 else 1
-    slot = (now.timetuple().tm_yday - 1) * RUNS_PER_DAY + run_of_day
-    return slot % len(LAYOUTS)
+def layout_index() -> int:
+    """Pick a layout at random for this post."""
+    return random.randrange(len(LAYOUTS))
 
 
 def build_post_image(text: str, out_path: str, layout: Optional[int] = None) -> str:
